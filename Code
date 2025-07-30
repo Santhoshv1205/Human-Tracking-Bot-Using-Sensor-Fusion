@@ -1,0 +1,67 @@
+from machine import Pin
+import time
+
+# Motor Control Pins
+motorA_forward = Pin(0, Pin.OUT)   # Left Motor Forward
+motorA_backward = Pin(2, Pin.OUT)  # Left Motor Backward
+motorB_forward = Pin(14, Pin.OUT)  # Right Motor Forward
+motorB_backward = Pin(12, Pin.OUT) # Right Motor Backward
+
+# Ultrasonic Sensor Pins
+trig = Pin(5, Pin.OUT)
+echo = Pin(4, Pin.IN)
+
+# Movement Functions
+def move_forward():
+    motorA_forward.on()
+    motorA_backward.off()
+    motorB_forward.on()
+    motorB_backward.off()
+
+def stop():
+    motorA_forward.off()
+    motorA_backward.off()
+    motorB_forward.off()
+    motorB_backward.off()
+
+# Distance Measurement Function
+def get_distance():
+    trig.off()
+    time.sleep_us(2)
+    trig.on()
+    time.sleep_us(10)
+    trig.off()
+
+    while echo.value() == 0:
+        pass
+    start = time.ticks_us()
+
+    while echo.value() == 1:
+        pass
+    end = time.ticks_us()
+
+    duration = time.ticks_diff(end, start)
+    distance_cm = (duration * 0.0343) / 2
+    return distance_cm
+
+# Main Loop - Human Following
+try:
+    while True:
+        dist = get_distance()
+        print("Distance:", dist, "cm")
+
+        if dist > 40:
+            print("Too far, moving forward.")
+            move_forward()
+        elif dist < 25:
+            print("Too close, stopping.")
+            stop()
+        else:
+            print("Within range, maintaining distance.")
+            stop()
+
+        time.sleep(0.2)
+
+except KeyboardInterrupt:
+    stop()
+    print("Stopped by user")
